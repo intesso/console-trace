@@ -62,7 +62,7 @@ require('debug-trace')([options])
 * __colors__ - (`Boolean|Object`: defaults to `undefined`) terminal colors support flag or a custom color object
 * __right__ - (`Boolean`: defaults to false) callsite alignment flag, when true prints infos on the right
 * __overwriteDebugLog__ - (`Function`: defaults to `console.log`) overwrites `debug` module log function, can be turned off with `overwriteDebugLog: false`
-* __patchOutput__ - (`Boolean`: defaults to true) overwrites `debug` module log function, can be turned off with `overwriteDebugLog: false`
+* __patchOutput__ - (`Boolean`: defaults to true) monkey patches `process.stdout.write` and `process.stderr.write` with `console.log` and `console.error` in case it is called from debug (function with the name `log`)
 
 ### Examples:
 
