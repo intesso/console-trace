@@ -8,13 +8,12 @@ var callsite = require('callsite')
   , isatty = Boolean(tty.isatty(2) && process.stdout.getWindowSize)
   , defaultColors = { log: '90', error: '91', warn: '93', info: '96', trace: '90' }
 
-
 /**
- * Store custom options
- *
- * @param {Object} options
- * @api public
- */
+* Store custom options
+*
+* @param {Object} options
+* @api public
+*/
 
 module.exports = function debugTrace(options) {
   options = options || {};
@@ -23,7 +22,8 @@ module.exports = function debugTrace(options) {
   console.traceOptions.colors = typeof options.colors !== 'undefined' ? options.colors : true;
   console.traceOptions.always = typeof options.always !== 'undefined' ? options.always : true;
   console.traceOptions.right = typeof options.right !== 'undefined' ? options.right : false;
-  if (typeof options.overwriteDebugLog === 'undefined' ||  options.overwriteDebugLog) overwriteDebugLog(options.overwriteDebugLog)
+  if (typeof options.overwriteDebugLog === 'undefined' || options.overwriteDebugLog) overwriteDebugLog(options.overwriteDebugLog)
+  if (typeof options.patchOutput === 'undefined' || options.patchOutput) patchOutput()
 }
 
 function overwriteDebugLog(debugLog) {
@@ -38,9 +38,30 @@ function overwriteDebugLog(debugLog) {
   }
 }
 
+function patchOutput() {
+  var stdout = process.stdout.write;
+  var stderr = process.stderr.write;
+  process.stdout.write = function write() {
+    var stack = callsite();
+    var trace = stack[1];
+    if (trace.getFunctionName() === 'log') {
+      return console.log.apply(console.log, arguments);
+    }
+    return stdout.apply(process.stdout, arguments)
+  }
+  process.stderr.write = function write() {
+    var stack = callsite();
+    var trace = stack[1];
+    if (trace.getFunctionName() === 'log') {
+      return console.error.apply(console.error, arguments);
+    }
+    return stderr.apply(process.stderr, arguments)
+  }
+}
+
 /**
- * Overrides the console methods.
- */
+* Overrides the console methods.
+*/
 
 ;['error', 'log', 'info', 'warn', 'trace'].forEach(function (name) {
   var fn = console[name];
@@ -59,6 +80,10 @@ function overwriteDebugLog(debugLog) {
         trace = stack[3];
         trace.debug = true;
       }
+      if (stack.length > 3 && trace.getFunctionName() === 'write') {
+        trace = stack[4];
+        trace.debug = true;
+      }
       trace.debug = trace.debug || false;
       arguments[0] = console.traceFormat(trace, name) + pad + arguments[0];
     }
@@ -68,12 +93,12 @@ function overwriteDebugLog(debugLog) {
 });
 
 /**
- * Overridable formatting function.
- *
- * @param {CallSite}
- * @param {String} calling method
- * @api public
- */
+* Overridable formatting function.
+*
+* @param {CallSite}
+* @param {String} calling method
+* @api public
+*/
 
 console.traceFormat = function (call, method) {
   call.filename = call.getFileName().replace(console.traceOptions.cwd, '');
@@ -112,20 +137,20 @@ console.traceFormat = function (call, method) {
 
 
 /**
- * Overridable string formatting function.
- *
- * @param {CallSite} CallSite Object pimped with additional properties.
- * @api public
- */
+* Overridable string formatting function.
+*
+* @param {CallSite} CallSite Object pimped with additional properties.
+* @api public
+*/
 console.format = function (c) {
   return c.getDate() + ": [" + c.filename + ":" + c.getLineNumber() + "] " + c.functionName;
 };
 
 /**
- * Adds trace getter to the `console` object.
- *
- * @api public
- */
+* Adds trace getter to the `console` object.
+*
+* @api public
+*/
 
 function getter() {
   this._trace = true;

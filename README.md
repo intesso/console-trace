@@ -62,6 +62,7 @@ require('debug-trace')([options])
 * __colors__ - (`Boolean|Object`: defaults to `undefined`) terminal colors support flag or a custom color object
 * __right__ - (`Boolean`: defaults to false) callsite alignment flag, when true prints infos on the right
 * __overwriteDebugLog__ - (`Function`: defaults to `console.log`) overwrites `debug` module log function, can be turned off with `overwriteDebugLog: false`
+* __patchOutput__ - (`Boolean`: defaults to true) overwrites `debug` module log function, can be turned off with `overwriteDebugLog: false`
 
 ### Examples:
 
