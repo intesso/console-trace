@@ -23,36 +23,49 @@ module.exports = function debugTrace(options) {
   console.traceOptions.colors = typeof options.colors !== 'undefined' ? options.colors : true;
   console.traceOptions.always = typeof options.always !== 'undefined' ? options.always : true;
   console.traceOptions.right = typeof options.right !== 'undefined' ? options.right : false;
+  if (typeof options.overwriteDebugLog === 'undefined' ||  options.overwriteDebugLog) overwriteDebugLog(options.overwriteDebugLog)
 }
 
-  /**
-   * Overrides the console methods.
-   */
+function overwriteDebugLog(debugLog) {
+  debugLog = typeof debugLog === 'function' ? debugLog : console.log;
+  try {
+    var Debug = require('debug');
+    Debug.log = function log() {
+      return debugLog.apply(debugLog, arguments);
+    };
+  } catch (error) {
+    console.log('debug module is not installed');
+  }
+}
 
-  ;['error', 'log', 'info', 'warn', 'trace'].forEach(function (name) {
-    var fn = console[name];
-    console[name] = function () {
-      if (console._trace || console.traceOptions.always) {
-        if (Buffer.isBuffer(arguments[0])) {
-          arguments[0] = arguments[0].inspect()
-        } else if (typeof arguments[0] === 'object') {
-          arguments[0] = JSON.stringify(arguments[0], null, '  ');
-        }
-        var pad = (arguments[0] && !console.traceOptions.right || !isatty ? ' ' : '');
-        // when using the debug module: dig one level deeper in the stack
-        var stack = callsite();
-        var trace = stack[1];
-        if (stack.length > 2 && trace.getFunctionName() === 'log') {
-          trace = stack[3];
-          trace.debug = true;
-        }
-        trace.debug = trace.debug || false;
-        arguments[0] = console.traceFormat(trace, name) + pad + arguments[0];
+/**
+ * Overrides the console methods.
+ */
+
+;['error', 'log', 'info', 'warn', 'trace'].forEach(function (name) {
+  var fn = console[name];
+  console[name] = function () {
+    if (console._trace || console.traceOptions.always) {
+      if (Buffer.isBuffer(arguments[0])) {
+        arguments[0] = arguments[0].inspect()
+      } else if (typeof arguments[0] === 'object') {
+        arguments[0] = JSON.stringify(arguments[0], null, '  ');
       }
-      console._trace = false;
-      return fn.apply(this, arguments);
+      var pad = (arguments[0] && !console.traceOptions.right || !isatty ? ' ' : '');
+      // when using the debug module: dig one level deeper in the stack
+      var stack = callsite();
+      var trace = stack[1];
+      if (stack.length > 2 && trace.getFunctionName() === 'log') {
+        trace = stack[3];
+        trace.debug = true;
+      }
+      trace.debug = trace.debug || false;
+      arguments[0] = console.traceFormat(trace, name) + pad + arguments[0];
     }
-  });
+    console._trace = false;
+    return fn.apply(this, arguments);
+  }
+});
 
 /**
  * Overridable formatting function.
@@ -63,7 +76,6 @@ module.exports = function debugTrace(options) {
  */
 
 console.traceFormat = function (call, method) {
-  var options = {};
   call.filename = call.getFileName().replace(console.traceOptions.cwd, '');
   call.method = method;
   call.functionName = call.getFunctionName() || 'anonymous'

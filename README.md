@@ -61,6 +61,7 @@ require('debug-trace')([options])
 * __cwd__ - (`String`: defaults to `process.cwd()`) the path that will be stripped from the callsite info
 * __colors__ - (`Boolean|Object`: defaults to `undefined`) terminal colors support flag or a custom color object
 * __right__ - (`Boolean`: defaults to false) callsite alignment flag, when true prints infos on the right
+* __overwriteDebugLog__ - (`Function`: defaults to `console.log`) overwrites `debug` module log function, can be turned off with `overwriteDebugLog: false`
 
 ### Examples:
 
