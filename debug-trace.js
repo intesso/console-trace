@@ -45,7 +45,9 @@ function patchOutput() {
     var stack = callsite();
     var trace = stack[1];
     if (trace.getFunctionName() === 'log') {
-      return console.log.apply(console.log, arguments);
+      var args = [].slice.call(arguments);
+      if (typeof args[args.length - 1] === 'string') args[args.length - 1] = args[args.length - 1].replace(/\n$/g, '');
+      return console.log.apply(console.log, args);
     }
     return stdout.apply(process.stdout, arguments)
   }
@@ -53,7 +55,9 @@ function patchOutput() {
     var stack = callsite();
     var trace = stack[1];
     if (trace.getFunctionName() === 'log') {
-      return console.error.apply(console.error, arguments);
+      var args = [].slice.call(arguments);
+      if (typeof args[args.length - 1] === 'string') args[args.length - 1] = args[args.length - 1].replace(/\n$/g, '');
+      return console.error.apply(console.error, args);
     }
     return stderr.apply(process.stderr, arguments)
   }
