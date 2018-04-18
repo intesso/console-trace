@@ -23,9 +23,11 @@ if (typeof Error.captureStackTrace === 'function') {
   ;['error', 'log', 'info', 'warn', 'trace'].forEach(function (name) {
     var fn = console[name];
     console[name] = function () {
+      var args = arguments;
       if (console._trace || console.traceOptions.always) {
-        if (typeof arguments[0] === 'object') {
-          arguments[0] = JSON.stringify(arguments[0], null, '  ');
+        if (args.length === 1) args = ['', args[0]];
+        if (typeof args[0] === 'object') {
+          args[0] = JSON.stringify(args[0], null, '  ');
         }
         // when using the debug module: dig one level deeper in the stack
         var stack = callsite();
@@ -35,10 +37,10 @@ if (typeof Error.captureStackTrace === 'function') {
           trace.debug = true;
         }
         trace.debug = trace.debug || false;
-        arguments[0] = console.traceFormat(trace, name) + arguments[0];
+        args[0] = console.traceFormat(trace, name) + args[0];
       }
       console._trace = false;
-      return fn.apply(this, arguments);
+      return fn.apply(this, args);
     }
   });
 
