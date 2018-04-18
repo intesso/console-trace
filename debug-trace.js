@@ -70,13 +70,15 @@ function patchOutput() {
 ;['error', 'log', 'info', 'warn', 'trace'].forEach(function (name) {
   var fn = console[name];
   console[name] = function () {
+    var args = arguments;
     if (console._trace || console.traceOptions.always) {
-      if (Buffer.isBuffer(arguments[0])) {
-        arguments[0] = arguments[0].inspect()
-      } else if (typeof arguments[0] === 'object') {
-        arguments[0] = JSON.stringify(arguments[0], null, '  ');
+      if (args.length === 1) args = ['', args[0]];
+      if (Buffer.isBuffer(args[0])) {
+        args[0] = args[0].inspect()
+      } else if (typeof args[0] === 'object') {
+        args[0] = JSON.stringify(args[0], null, '  ');
       }
-      var pad = (arguments[0] && !console.traceOptions.right || !isatty ? ' ' : '');
+      var pad = (args[0] && !console.traceOptions.right || !isatty ? ' ' : '');
       // when using the debug module: dig one level deeper in the stack
       var stack = callsite();
       var trace = stack[1];
@@ -89,10 +91,10 @@ function patchOutput() {
         trace.debug = true;
       }
       trace.debug = trace.debug || false;
-      arguments[0] = console.traceFormat(trace, name) + pad + arguments[0];
+      args[0] = console.traceFormat(trace, name) + pad + args[0];
     }
     console._trace = false;
-    return fn.apply(this, arguments);
+    return fn.apply(this, args);
   }
 });
 
