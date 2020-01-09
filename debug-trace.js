@@ -57,7 +57,7 @@ function patchOutput() {
     if (trace.getFunctionName() === 'log') {
       var args = [].slice.call(arguments);
       if (typeof args[args.length - 1] === 'string') args[args.length - 1] = args[args.length - 1].replace(/\n$/g, '');
-      return console.error.apply(console.error, args);
+      return console.log.apply(console.log, args);
     }
     return stderr.apply(process.stderr, arguments)
   }
